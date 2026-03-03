@@ -54,9 +54,17 @@ async function initDatabase() {
       home_score INTEGER DEFAULT NULL,
       away_score INTEGER DEFAULT NULL,
       match_date TEXT NOT NULL,
-      is_finished INTEGER DEFAULT 0
+      is_finished INTEGER DEFAULT 0,
+      matchday INTEGER DEFAULT 1
     )
   `);
+
+  // matchday-Spalte nachträglich hinzufügen falls Tabelle bereits existiert
+  try {
+    await dbRun('ALTER TABLE matches ADD COLUMN matchday INTEGER DEFAULT 1');
+  } catch (e) {
+    // Spalte existiert bereits
+  }
 
   await dbRun(`
     CREATE TABLE IF NOT EXISTS tips (
@@ -75,20 +83,23 @@ async function initDatabase() {
   const count = await dbGet('SELECT COUNT(*) as count FROM matches');
   if (count.count === 0) {
     const demoMatches = [
-      ['FC Bayern München', 'Borussia Dortmund', '2025-03-08T15:30:00.000Z'],
-      ['RB Leipzig', 'Bayer 04 Leverkusen', '2025-03-09T15:30:00.000Z'],
-      ['VfB Stuttgart', 'Eintracht Frankfurt', '2025-03-09T17:30:00.000Z'],
-      ['Borussia Mönchengladbach', 'VfL Wolfsburg', '2025-03-10T18:30:00.000Z'],
-      ['Union Berlin', 'SC Freiburg', '2025-03-11T18:30:00.000Z'],
+      [24, 'VfL Bochum', 'VfL Wolfsburg', null, null, '2025-03-08T15:30:00.000Z', 0],
+      [24, 'VfB Stuttgart', 'Bayern München', null, null, '2025-03-08T18:30:00.000Z', 0],
+      [24, 'Bayern München', 'Borussia Dortmund', 1, 2, '2025-03-09T18:30:00.000Z', 1],
+      [24, 'RB Leipzig', 'Bayer Leverkusen', null, null, '2025-03-10T15:30:00.000Z', 0],
+      [25, 'Borussia Dortmund', 'RB Leipzig', null, null, '2025-03-15T15:30:00.000Z', 0],
+      [25, 'Bayern München', 'VfB Stuttgart', null, null, '2025-03-16T15:30:00.000Z', 0],
+      [26, 'Bayer Leverkusen', 'Bayern München', null, null, '2025-03-22T18:30:00.000Z', 0],
+      [26, 'VfL Wolfsburg', 'RB Leipzig', null, null, '2025-03-23T15:30:00.000Z', 0],
     ];
 
-    for (const [home, away, date] of demoMatches) {
+    for (const [md, home, away, hs, aw, date, finished] of demoMatches) {
       await dbRun(
-        'INSERT INTO matches (home_team, away_team, match_date) VALUES (?, ?, ?)',
-        [home, away, date]
+        'INSERT INTO matches (matchday, home_team, away_team, home_score, away_score, match_date, is_finished) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [md, home, away, hs, aw, date, finished]
       );
     }
-    console.log('5 Demo-Spiele (Bundesliga) eingefügt.');
+    console.log('Demo-Spiele (Spieltag 24–26) eingefügt.');
   }
 }
 
@@ -106,15 +117,47 @@ function calculatePoints(tipHome, tipAway, resultHome, resultAway) {
 }
 
 
+app.get('/api/matchdays', async (req, res) => {
+  try {
+    const rows = await dbAll(
+      'SELECT DISTINCT matchday FROM matches ORDER BY matchday ASC'
+    );
+    res.json(rows.map(r => r.matchday));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Fehler beim Laden der Spieltage' });
+  }
+});
+
 app.get('/api/matches', async (req, res) => {
   try {
-    const matches = await dbAll(
-      'SELECT id, home_team, away_team, home_score, away_score, match_date, is_finished FROM matches ORDER BY match_date ASC'
-    );
+    const matchday = req.query.matchday;
+    let sql = 'SELECT id, home_team, away_team, home_score, away_score, match_date, is_finished, matchday FROM matches';
+    const params = [];
+    if (matchday != null) {
+      sql += ' WHERE matchday = ?';
+      params.push(parseInt(matchday, 10));
+    }
+    sql += ' ORDER BY match_date ASC';
+    const matches = await dbAll(sql, params);
     res.json(matches);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Fehler beim Laden der Spiele' });
+  }
+});
+
+app.get('/api/user/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (id === 1) {
+      res.json({ id: 1, name: 'Demo User' });
+    } else {
+      res.status(404).json({ error: 'User nicht gefunden' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Fehler beim Laden des Users' });
   }
 });
 
