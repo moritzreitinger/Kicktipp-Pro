@@ -57,6 +57,25 @@ class ApiService {
       throw Exception(body['error'] ?? 'Fehler beim Speichern');
     }
   }
+
+  static Future<void> setMatchResult({
+    required int matchId,
+    required int homeScore,
+    required int awayScore,
+  }) async {
+    final res = await http.put(
+      Uri.parse('$baseUrl/api/admin/match/$matchId'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'home_score': homeScore,
+        'away_score': awayScore,
+      }),
+    );
+    if (res.statusCode >= 400) {
+      final body = jsonDecode(res.body);
+      throw Exception(body['error'] ?? 'Fehler beim Speichern');
+    }
+  }
 }
 
 class MatchDto {

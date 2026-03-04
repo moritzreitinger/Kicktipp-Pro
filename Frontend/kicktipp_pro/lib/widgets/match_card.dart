@@ -47,6 +47,19 @@ class _MatchCardState extends State<MatchCard> {
     super.dispose();
   }
 
+  int _calculatePoints(int tipHome, int tipAway, int resultHome, int resultAway) {
+    final tipTendenz = (tipHome - tipAway).sign;
+    final resultTendenz = (resultHome - resultAway).sign;
+
+    if (tipHome == resultHome && tipAway == resultAway) {
+      return 3;
+    }
+    if (tipTendenz == resultTendenz) {
+      return 1;
+    }
+    return 0;
+  }
+
   Future<void> _saveTip() async {
     final homeText = _homeController.text.trim();
     final awayText = _awayController.text.trim();
@@ -119,9 +132,11 @@ class _MatchCardState extends State<MatchCard> {
     final hasTip = widget.existingTipHome != null || _savedSuccess;
     final backgroundColor = _savedSuccess
         ? Colors.green.withOpacity(0.05)
-        : hasTip
-            ? AppTheme.lightGray
-            : Colors.white;
+        : isFinished
+            ? Colors.grey[100]
+            : hasTip
+                ? AppTheme.lightGray
+                : Colors.white;
     final borderColor = _savedSuccess ? Colors.green : Colors.transparent;
 
     return Container(
@@ -154,12 +169,30 @@ class _MatchCardState extends State<MatchCard> {
               ),
               const Spacer(),
               if (isFinished)
-                Text(
-                  'Endergebnis: ${match.homeScore}:${match.awayScore}',
-                  style: const TextStyle(
-                    color: AppTheme.darkGray,
-                    fontSize: 14,
-                  ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Tipp vs. Ergebnis
+                    if (widget.existingTipHome != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(
+                          'Dein Tipp: ${widget.existingTipHome}:${widget.existingTipAway}',
+                          style: const TextStyle(
+                            color: AppTheme.darkGray,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    Text(
+                      'Ergebnis: ${match.homeScore}:${match.awayScore}',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 )
               else
                 _ScoreInputSection(
@@ -178,6 +211,52 @@ class _MatchCardState extends State<MatchCard> {
               ),
             ],
           ),
+          if (isFinished && widget.existingTipHome != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              decoration: BoxDecoration(
+                color: _getPointsColor(
+                  _calculatePoints(
+                    widget.existingTipHome!,
+                    widget.existingTipAway!,
+                    match.homeScore!,
+                    match.awayScore!,
+                  ),
+                ).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Beendet',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.darkGray,
+                    ),
+                  ),
+                  Text(
+                    '${_calculatePoints(widget.existingTipHome!, widget.existingTipAway!, match.homeScore!, match.awayScore!)} Pt.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: _getPointsColor(
+                        _calculatePoints(
+                          widget.existingTipHome!,
+                          widget.existingTipAway!,
+                          match.homeScore!,
+                          match.awayScore!,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (!isFinished) ...[
             if (hasTip && !_isSaving)
               Padding(
@@ -231,12 +310,18 @@ class _MatchCardState extends State<MatchCard> {
                             ),
                           )
                         : _savedSuccess
-                            ? const Row(
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.check, size: 18),
-                                  SizedBox(width: 4),
-                                  Text('Gespeichert'),
+                                  const Icon(Icons.check, size: 16),
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      'Gespeichert',
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
                                 ],
                               )
                             : const Text('Speichern'),
@@ -248,6 +333,12 @@ class _MatchCardState extends State<MatchCard> {
         ],
       ),
     );
+  }
+
+  Color _getPointsColor(int points) {
+    if (points == 3) return Colors.green;
+    if (points == 1) return Colors.orange;
+    return Colors.red;
   }
 }
 

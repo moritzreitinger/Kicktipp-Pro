@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'tips_screen.dart';
 import 'my_tips_screen.dart';
+import 'admin_screen.dart';
 import 'placeholder_screen.dart';
 import '../services/api_service.dart';
 
@@ -15,12 +16,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   String _userName = 'Demo User';
+  late final GlobalKey _tipsScreenKey;
   late final GlobalKey _myTipsScreenKey;
+  late final GlobalKey _adminScreenKey;
 
   @override
   void initState() {
     super.initState();
+    _tipsScreenKey = GlobalKey();
     _myTipsScreenKey = GlobalKey();
+    _adminScreenKey = GlobalKey();
     ApiService.getUser(1).then((u) {
       if (mounted) setState(() => _userName = u.name);
     }).catchError((_) {});
@@ -33,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: [
           TipsScreen(
+            key: _tipsScreenKey,
             userName: _userName,
             onTipSaved: () {
               (_myTipsScreenKey.currentState as dynamic)?.refreshTips();
@@ -47,10 +53,15 @@ class _HomeScreenState extends State<HomeScreen> {
             key: _myTipsScreenKey,
             userName: _userName,
           ),
-          PlaceholderScreen(
-            title: 'Admin',
+          AdminScreen(
+            key: _adminScreenKey,
             userName: _userName,
-            icon: Icons.admin_panel_settings,
+            onResultSaved: () {
+              // Refresh TipsScreen, MyTipsScreen und AdminScreen
+              (_tipsScreenKey.currentState as dynamic)?.refreshMatches();
+              (_myTipsScreenKey.currentState as dynamic)?.refreshTips();
+              (_adminScreenKey.currentState as dynamic)?.refreshMatches();
+            },
           ),
           PlaceholderScreen(
             title: 'Profil',

@@ -16,15 +16,23 @@ class TipsScreen extends StatefulWidget {
 
   @override
   State<TipsScreen> createState() => _TipsScreenState();
+
+  static _TipsScreenState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_TipsScreenState>();
+  }
 }
 
 class _TipsScreenState extends State<TipsScreen> {
   List<int> _matchdays = [];
   int? _selectedMatchday;
+  int? _selectedIndex; // Index im Array für einfacheres Navigieren
   List<MatchDto> _matches = [];
   Map<int, (int, int)> _userTips = {};
   bool _loading = true;
   String? _error;
+  
+  // Cache für Spieltage
+  final Map<int, List<MatchDto>> _matchCache = {};
 
   @override
   void initState() {
@@ -40,12 +48,7 @@ class _TipsScreenState extends State<TipsScreen> {
     try {
       final matchdays = await ApiService.getMatchdays();
       final tips = await ApiService.getUserTips(1);
-      final matchday = matchdays.isNotEmpty ? matchdays.first : null;
-      List<MatchDto> matches = [];
-      if (matchday != null) {
-        matches = await ApiService.getMatches(matchday: matchday);
-      }
-
+      
       final tipMap = <int, (int, int)>{};
       for (final t in tips) {
         tipMap[t.matchId] = (t.tipHome, t.tipAway);
@@ -53,13 +56,17 @@ class _TipsScreenState extends State<TipsScreen> {
 
       setState(() {
         _matchdays = matchdays;
-        _selectedMatchday = matchday;
-        _matches = matches;
+        _selectedIndex = 0;
+        _selectedMatchday = matchdays.isNotEmpty ? matchdays.first : null;
         _userTips = tipMap;
         _loading = false;
       });
       
-      // Aktualisiere auch MyTipsScreen wenn vorhanden
+      // Lade gleich den ersten Spieltag
+      if (_selectedMatchday != null) {
+        await _loadMatchday(_selectedMatchday!);
+      }
+      
       widget.onTipSaved?.call();
     } catch (e) {
       setState(() {
@@ -69,23 +76,58 @@ class _TipsScreenState extends State<TipsScreen> {
     }
   }
 
-  Future<void> _onMatchdayChanged(int md) async {
-    setState(() {
-      _selectedMatchday = md;
-      _loading = true;
-    });
-    try {
-      final matches = await ApiService.getMatches(matchday: md);
+  Future<void> _loadMatchday(int matchday) async {
+    // Wenn bereits gecacht, verwende den Cache
+    if (_matchCache.containsKey(matchday)) {
       setState(() {
-        _matches = matches;
-        _loading = false;
+        _matches = _matchCache[matchday]!;
       });
+      return;
+    }
+
+    // Sonst lade vom Backend
+    setState(() => _error = null);
+    try {
+      final matches = await ApiService.getMatches(matchday: matchday);
+      _matchCache[matchday] = matches;
+      setState(() => _matches = matches);
     } catch (e) {
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
-        _loading = false;
       });
     }
+  }
+
+  Future<void> _goToPreviousMatchday() async {
+    if (_selectedIndex == null || _selectedIndex! <= 0) return;
+    
+    final newIndex = _selectedIndex! - 1;
+    final newMatchday = _matchdays[newIndex];
+    
+    setState(() {
+      _selectedIndex = newIndex;
+      _selectedMatchday = newMatchday;
+    });
+    
+    await _loadMatchday(newMatchday);
+  }
+
+  Future<void> _goToNextMatchday() async {
+    if (_selectedIndex == null || _selectedIndex! >= _matchdays.length - 1) return;
+    
+    final newIndex = _selectedIndex! + 1;
+    final newMatchday = _matchdays[newIndex];
+    
+    setState(() {
+      _selectedIndex = newIndex;
+      _selectedMatchday = newMatchday;
+    });
+    
+    await _loadMatchday(newMatchday);
+  }
+
+  Future<void> refreshMatches() async {
+    await _load();
   }
 
   @override
@@ -97,9 +139,9 @@ class _TipsScreenState extends State<TipsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: Text(
-              'Match-Feed',
+              'Tipps',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -107,40 +149,88 @@ class _TipsScreenState extends State<TipsScreen> {
               ),
             ),
           ),
-          if (_matchdays.isNotEmpty)
+          if (_selectedMatchday != null)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppTheme.cardBorder),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                child: Row(
-                  children: _matchdays.map((md) {
-                    final isSelected = _selectedMatchday == md;
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () => _onMatchdayChanged(md),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  child: Row(
+                    children: [
+                      // Linker Pfeil
+                      GestureDetector(
+                        onTap: _selectedIndex! > 0 ? _goToPreviousMatchday : null,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppTheme.segmentSelected : Colors.white,
-                            borderRadius: BorderRadius.circular(8),
+                            color: _selectedIndex! > 0
+                                ? AppTheme.primaryOrange
+                                : AppTheme.mediumGray,
+                            shape: BoxShape.circle,
                           ),
-                          child: Text(
-                            'Spieltag $md',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: isSelected ? Colors.black : AppTheme.darkGray,
-                            ),
+                          child: const Icon(
+                            Icons.chevron_left,
+                            color: Colors.white,
+                            size: 24,
                           ),
                         ),
                       ),
-                    );
-                  }).toList(),
+                      // Spieltag-Info Mitte
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Spieltag $_selectedMatchday',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            Text(
+                              '${_selectedIndex! + 1}/${_matchdays.length}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.darkGray,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Rechter Pfeil
+                      GestureDetector(
+                        onTap: _selectedIndex! < _matchdays.length - 1
+                            ? _goToNextMatchday
+                            : null,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _selectedIndex! < _matchdays.length - 1
+                                ? AppTheme.primaryOrange
+                                : AppTheme.mediumGray,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.chevron_right,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -153,6 +243,10 @@ class _TipsScreenState extends State<TipsScreen> {
   }
 
   Widget _buildContent() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
     if (_error != null) {
       return Center(
         child: Padding(
@@ -175,9 +269,7 @@ class _TipsScreenState extends State<TipsScreen> {
         ),
       );
     }
-    if (_loading && _matches.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    
     if (_matches.isEmpty) {
       return const Center(
         child: Text(
@@ -186,6 +278,7 @@ class _TipsScreenState extends State<TipsScreen> {
         ),
       );
     }
+    
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView.builder(

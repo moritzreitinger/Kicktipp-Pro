@@ -4,6 +4,8 @@ import '../services/api_service.dart';
 import '../widgets/custom_app_bar.dart';
 import '../utils/team_initials.dart';
 
+enum _FilterType { all, finished, open }
+
 class MyTipsScreen extends StatefulWidget {
   final String userName;
 
@@ -22,6 +24,7 @@ class _MyTipsScreenState extends State<MyTipsScreen> {
   bool _loading = true;
   String? _error;
   int _totalPoints = 0;
+  _FilterType _currentFilter = _FilterType.all;
 
   @override
   void initState() {
@@ -57,6 +60,17 @@ class _MyTipsScreenState extends State<MyTipsScreen> {
     await _load();
   }
 
+  List<TipDto> _getFilteredTips() {
+    switch (_currentFilter) {
+      case _FilterType.all:
+        return _tips;
+      case _FilterType.finished:
+        return _tips.where((tip) => tip.isFinishedMatch).toList();
+      case _FilterType.open:
+        return _tips.where((tip) => !tip.isFinishedMatch).toList();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,6 +87,35 @@ class _MyTipsScreenState extends State<MyTipsScreen> {
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.cardBorder),
+              ),
+              child: Row(
+                children: [
+                  _FilterButton(
+                    label: 'Alle',
+                    isSelected: _currentFilter == _FilterType.all,
+                    onTap: () => setState(() => _currentFilter = _FilterType.all),
+                  ),
+                  _FilterButton(
+                    label: 'Beendet',
+                    isSelected: _currentFilter == _FilterType.finished,
+                    onTap: () => setState(() => _currentFilter = _FilterType.finished),
+                  ),
+                  _FilterButton(
+                    label: 'Offen',
+                    isSelected: _currentFilter == _FilterType.open,
+                    onTap: () => setState(() => _currentFilter = _FilterType.open),
+                  ),
+                ],
               ),
             ),
           ),
@@ -131,7 +174,8 @@ class _MyTipsScreenState extends State<MyTipsScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_tips.isEmpty) {
+    final filteredTips = _getFilteredTips();
+    if (filteredTips.isEmpty) {
       return const Center(
         child: Text(
           'Keine Tipps vorhanden',
@@ -144,11 +188,48 @@ class _MyTipsScreenState extends State<MyTipsScreen> {
       onRefresh: _load,
       child: ListView.builder(
         padding: const EdgeInsets.only(bottom: 100),
-        itemCount: _tips.length,
+        itemCount: filteredTips.length,
         itemBuilder: (_, i) {
-          final tip = _tips[i];
+          final tip = filteredTips[i];
           return _TipCard(tip: tip);
         },
+      ),
+    );
+  }
+}
+
+class _FilterButton extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FilterButton({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? AppTheme.segmentSelected : Colors.white,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: isSelected ? Colors.black : AppTheme.darkGray,
+            ),
+          ),
+        ),
       ),
     );
   }
