@@ -148,8 +148,11 @@ class _AdminScreenState extends State<AdminScreen> {
   }
 
   Future<void> refreshMatches() async {
-    _matchCache.clear();
-    await _load();
+    // Cache invalidieren und nur den aktuellen Spieltag neu laden
+    if (_selectedMatchday != null) {
+      _matchCache.remove(_selectedMatchday);
+      await _loadMatchday(_selectedMatchday!);
+    }
   }
 
   Future<void> _saveResult(MatchDto match) async {

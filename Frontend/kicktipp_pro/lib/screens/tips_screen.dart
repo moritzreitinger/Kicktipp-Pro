@@ -66,8 +66,6 @@ class _TipsScreenState extends State<TipsScreen> {
       if (_selectedMatchday != null) {
         await _loadMatchday(_selectedMatchday!);
       }
-      
-      widget.onTipSaved?.call();
     } catch (e) {
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
@@ -127,7 +125,31 @@ class _TipsScreenState extends State<TipsScreen> {
   }
 
   Future<void> refreshMatches() async {
-    await _load();
+    try {
+      // Lade nur die Tipps neu
+      final tips = await ApiService.getUserTips(1);
+      
+      final tipMap = <int, (int, int)>{};
+      for (final t in tips) {
+        tipMap[t.matchId] = (t.tipHome, t.tipAway);
+      }
+
+      setState(() {
+        _userTips = tipMap;
+      });
+
+      // Cache invalidieren und den aktuellen Spieltag neu laden
+      if (_selectedMatchday != null) {
+        _matchCache.remove(_selectedMatchday);
+        await _loadMatchday(_selectedMatchday!);
+      }
+      
+      widget.onTipSaved?.call();
+    } catch (e) {
+      setState(() {
+        _error = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
   }
 
   @override
@@ -291,7 +313,7 @@ class _TipsScreenState extends State<TipsScreen> {
             match: m,
             existingTipHome: tip?.$1,
             existingTipAway: tip?.$2,
-            onSaved: _load,
+            onSaved: refreshMatches,
           );
         },
       ),

@@ -4,6 +4,7 @@ import 'tips_screen.dart';
 import 'my_tips_screen.dart';
 import 'admin_screen.dart';
 import 'placeholder_screen.dart';
+import 'leaderboard_screen.dart';
 import '../services/api_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -44,10 +45,8 @@ class _HomeScreenState extends State<HomeScreen> {
               (_myTipsScreenKey.currentState as dynamic)?.refreshTips();
             },
           ),
-          PlaceholderScreen(
-            title: 'Bestenliste',
+          LeaderboardScreen(
             userName: _userName,
-            icon: Icons.emoji_events,
           ),
           MyTipsScreen(
             key: _myTipsScreenKey,
@@ -120,15 +119,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-        ),
-      ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(right: 16, bottom: 8),
-        child: FloatingActionButton(
-          mini: true,
-          onPressed: () {},
-          backgroundColor: AppTheme.darkGray,
-          child: const Icon(Icons.help, color: Colors.white, size: 24),
         ),
       ),
     );
