@@ -6,8 +6,13 @@ import '../widgets/match_card.dart';
 
 class TipsScreen extends StatefulWidget {
   final String userName;
+  final VoidCallback? onTipSaved;
 
-  const TipsScreen({super.key, required this.userName});
+  const TipsScreen({
+    super.key,
+    required this.userName,
+    this.onTipSaved,
+  });
 
   @override
   State<TipsScreen> createState() => _TipsScreenState();
@@ -53,6 +58,9 @@ class _TipsScreenState extends State<TipsScreen> {
         _userTips = tipMap;
         _loading = false;
       });
+      
+      // Aktualisiere auch MyTipsScreen wenn vorhanden
+      widget.onTipSaved?.call();
     } catch (e) {
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');

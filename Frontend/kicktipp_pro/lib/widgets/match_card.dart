@@ -26,6 +26,7 @@ class _MatchCardState extends State<MatchCard> {
   late final TextEditingController _homeController;
   late final TextEditingController _awayController;
   bool _isSaving = false;
+  bool _savedSuccess = false;
   String? _error;
 
   @override
@@ -71,7 +72,17 @@ class _MatchCardState extends State<MatchCard> {
         tipHome: home,
         tipAway: away,
       );
+      if (mounted) {
+        setState(() {
+          _savedSuccess = true;
+          _isSaving = false;
+        });
+      }
       widget.onSaved?.call();
+      await Future.delayed(const Duration(milliseconds: 1500));
+      if (mounted) {
+        setState(() => _savedSuccess = false);
+      }
     } catch (e) {
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
@@ -79,7 +90,6 @@ class _MatchCardState extends State<MatchCard> {
       });
       return;
     }
-    setState(() => _isSaving = false);
   }
 
   void _incrementHome() {
@@ -92,17 +102,38 @@ class _MatchCardState extends State<MatchCard> {
     if (v > 0) _homeController.text = '${v - 1}';
   }
 
+  void _incrementAway() {
+    final v = int.tryParse(_awayController.text) ?? 0;
+    _awayController.text = '${v + 1}';
+  }
+
+  void _decrementAway() {
+    final v = int.tryParse(_awayController.text) ?? 0;
+    if (v > 0) _awayController.text = '${v - 1}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final match = widget.match;
     final isFinished = match.isFinishedMatch;
+    final hasTip = widget.existingTipHome != null || _savedSuccess;
+    final backgroundColor = _savedSuccess
+        ? Colors.green.withOpacity(0.05)
+        : hasTip
+            ? AppTheme.lightGray
+            : Colors.white;
+    final borderColor = _savedSuccess ? Colors.green : Colors.transparent;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: borderColor,
+          width: _savedSuccess ? 2 : 0,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.06),
@@ -136,6 +167,8 @@ class _MatchCardState extends State<MatchCard> {
                   awayController: _awayController,
                   onIncrementHome: _incrementHome,
                   onDecrementHome: _decrementHome,
+                  onIncrementAway: _incrementAway,
+                  onDecrementAway: _decrementAway,
                 ),
               const Spacer(),
               _TeamSection(
@@ -146,6 +179,32 @@ class _MatchCardState extends State<MatchCard> {
             ],
           ),
           if (!isFinished) ...[
+            if (hasTip && !_isSaving)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _savedSuccess ? Icons.check_circle : Icons.check,
+                      size: 16,
+                      color: Colors.green,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        _savedSuccess ? 'Tipp gespeichert!' : 'Tipp vorhanden',
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -155,7 +214,7 @@ class _MatchCardState extends State<MatchCard> {
                 ),
               ),
             Align(
-              alignment: Alignment.centerRight,
+              alignment: Alignment.center,
               child: Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: SizedBox(
@@ -171,7 +230,16 @@ class _MatchCardState extends State<MatchCard> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text('Speichern'),
+                        : _savedSuccess
+                            ? const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.check, size: 18),
+                                  SizedBox(width: 4),
+                                  Text('Gespeichert'),
+                                ],
+                              )
+                            : const Text('Speichern'),
                   ),
                 ),
               ),
@@ -271,12 +339,16 @@ class _ScoreInputSection extends StatelessWidget {
   final TextEditingController awayController;
   final VoidCallback onIncrementHome;
   final VoidCallback onDecrementHome;
+  final VoidCallback onIncrementAway;
+  final VoidCallback onDecrementAway;
 
   const _ScoreInputSection({
     required this.homeController,
     required this.awayController,
     required this.onIncrementHome,
     required this.onDecrementHome,
+    required this.onIncrementAway,
+    required this.onDecrementAway,
   });
 
   @override
@@ -345,7 +417,7 @@ class _ScoreInputSection extends StatelessWidget {
           ),
         ),
         SizedBox(
-          width: 56,
+          width: 70,
           child: TextFormField(
             controller: awayController,
             keyboardType: TextInputType.number,
@@ -354,8 +426,42 @@ class _ScoreInputSection extends StatelessWidget {
               LengthLimitingTextInputFormatter(2),
             ],
             textAlign: TextAlign.center,
-            decoration: const InputDecoration(
-              contentPadding: EdgeInsets.symmetric(vertical: 8),
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 8,
+                horizontal: 8,
+              ),
+              suffixIcon: Container(
+                width: 24,
+                margin: const EdgeInsets.only(right: 4, top: 4, bottom: 4),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkGray,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    InkWell(
+                      onTap: onIncrementAway,
+                      child: const Icon(
+                        Icons.keyboard_arrow_up,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                    InkWell(
+                      onTap: onDecrementAway,
+                      child: const Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              suffixIconConstraints: const BoxConstraints(maxHeight: 40),
             ),
           ),
         ),

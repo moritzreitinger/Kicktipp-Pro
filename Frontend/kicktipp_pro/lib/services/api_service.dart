@@ -111,21 +111,50 @@ class UserDto {
 }
 
 class TipDto {
+  final int id;
   final int matchId;
+  final int userId;
   final int tipHome;
   final int tipAway;
+  final int pointsEarned;
+  final String homeTeam;
+  final String awayTeam;
+  final int? homeScore;
+  final int? awayScore;
+  final String matchDate;
+  final int isFinished;
 
   TipDto({
+    required this.id,
     required this.matchId,
+    required this.userId,
     required this.tipHome,
     required this.tipAway,
+    required this.pointsEarned,
+    required this.homeTeam,
+    required this.awayTeam,
+    this.homeScore,
+    this.awayScore,
+    required this.matchDate,
+    required this.isFinished,
   });
 
   factory TipDto.fromJson(Map<String, dynamic> json) {
     return TipDto(
+      id: json['id'] as int,
       matchId: json['match_id'] as int,
+      userId: json['user_id'] as int,
       tipHome: json['tip_home'] as int,
       tipAway: json['tip_away'] as int,
+      pointsEarned: (json['points_earned'] ?? 0) as int,
+      homeTeam: json['home_team'] as String,
+      awayTeam: json['away_team'] as String,
+      homeScore: json['home_score'] as int?,
+      awayScore: json['away_score'] as int?,
+      matchDate: json['match_date'] as String,
+      isFinished: (json['is_finished'] ?? 0) as int,
     );
   }
+
+  bool get isFinishedMatch => isFinished == 1;
 }
