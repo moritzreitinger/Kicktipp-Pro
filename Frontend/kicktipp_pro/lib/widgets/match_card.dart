@@ -9,6 +9,7 @@ class MatchCard extends StatefulWidget {
   final int? existingTipHome;
   final int? existingTipAway;
   final VoidCallback? onSaved;
+  final Color themeColor;
 
   const MatchCard({
     super.key,
@@ -16,6 +17,7 @@ class MatchCard extends StatefulWidget {
     this.existingTipHome,
     this.existingTipAway,
     this.onSaved,
+    required this.themeColor,
   });
 
   @override
@@ -166,6 +168,7 @@ class _MatchCardState extends State<MatchCard> {
                 initials: getTeamInitials(match.homeTeam),
                 teamName: match.homeTeam,
                 isLeft: true,
+                themeColor: widget.themeColor,
               ),
               const Spacer(),
               if (isFinished)
@@ -208,6 +211,7 @@ class _MatchCardState extends State<MatchCard> {
                 initials: getTeamInitials(match.awayTeam),
                 teamName: match.awayTeam,
                 isLeft: false,
+                themeColor: widget.themeColor,
               ),
             ],
           ),
@@ -346,11 +350,13 @@ class _TeamSection extends StatelessWidget {
   final String initials;
   final String teamName;
   final bool isLeft;
+  final Color themeColor;
 
   const _TeamSection({
     required this.initials,
     required this.teamName,
     required this.isLeft,
+    required this.themeColor,
   });
 
   @override
@@ -363,7 +369,7 @@ class _TeamSection extends StatelessWidget {
             isLeft ? MainAxisAlignment.start : MainAxisAlignment.end,
         children: [
           if (isLeft) ...[
-            _TeamAvatar(initials: initials),
+            _TeamAvatar(initials: initials, themeColor: themeColor),
             const SizedBox(width: 8),
             Flexible(
               child: Text(
@@ -390,7 +396,7 @@ class _TeamSection extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            _TeamAvatar(initials: initials),
+            _TeamAvatar(initials: initials, themeColor: themeColor),
           ],
         ],
       ),
@@ -400,8 +406,9 @@ class _TeamSection extends StatelessWidget {
 
 class _TeamAvatar extends StatelessWidget {
   final String initials;
+  final Color themeColor;
 
-  const _TeamAvatar({required this.initials});
+  const _TeamAvatar({required this.initials, required this.themeColor});
 
   @override
   Widget build(BuildContext context) {
@@ -409,7 +416,7 @@ class _TeamAvatar extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: AppTheme.primaryOrange,
+        color: themeColor,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,

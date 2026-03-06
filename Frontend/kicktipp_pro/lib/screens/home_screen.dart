@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
 import 'tips_screen.dart';
 import 'my_tips_screen.dart';
 import 'admin_screen.dart';
-import 'placeholder_screen.dart';
 import 'leaderboard_screen.dart';
+import 'profile_screen.dart';
 import '../services/api_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   String _userName = 'Demo User';
+  AppThemeMode _currentTheme = AppThemeMode.goldenTrophy;
   late final GlobalKey _tipsScreenKey;
   late final GlobalKey _myTipsScreenKey;
   late final GlobalKey _adminScreenKey;
@@ -30,6 +32,33 @@ class _HomeScreenState extends State<HomeScreen> {
     ApiService.getUser(1).then((u) {
       if (mounted) setState(() => _userName = u.name);
     }).catchError((_) {});
+    _loadTheme();
+  }
+
+  Future<void> _loadTheme() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final themeIndex = prefs.getInt('app_theme');
+      if (themeIndex != null && mounted) {
+        setState(() {
+          _currentTheme = AppThemeMode.values[themeIndex];
+        });
+      }
+    } catch (e) {
+      // Falls SharedPreferences nicht verfügbar ist, verwende Default
+    }
+  }
+
+  Future<void> _setTheme(AppThemeMode theme) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('app_theme', theme.index);
+    } catch (e) {
+      // Falls SharedPreferences nicht verfügbar ist, speichern im Memory
+    }
+    setState(() {
+      _currentTheme = theme;
+    });
   }
 
   @override
@@ -41,20 +70,24 @@ class _HomeScreenState extends State<HomeScreen> {
           TipsScreen(
             key: _tipsScreenKey,
             userName: _userName,
+            themeColor: AppTheme.getPrimaryColor(_currentTheme),
             onTipSaved: () {
               (_myTipsScreenKey.currentState as dynamic)?.refreshTips();
             },
           ),
           LeaderboardScreen(
             userName: _userName,
+            themeColor: AppTheme.getPrimaryColor(_currentTheme),
           ),
           MyTipsScreen(
             key: _myTipsScreenKey,
             userName: _userName,
+            themeColor: AppTheme.getPrimaryColor(_currentTheme),
           ),
           AdminScreen(
             key: _adminScreenKey,
             userName: _userName,
+            themeColor: AppTheme.getPrimaryColor(_currentTheme),
             onResultSaved: () {
               // Refresh TipsScreen, MyTipsScreen und AdminScreen
               (_tipsScreenKey.currentState as dynamic)?.refreshMatches();
@@ -62,10 +95,10 @@ class _HomeScreenState extends State<HomeScreen> {
               (_adminScreenKey.currentState as dynamic)?.refreshMatches();
             },
           ),
-          PlaceholderScreen(
-            title: 'Profil',
+          ProfileScreen(
             userName: _userName,
-            icon: Icons.person,
+            currentTheme: _currentTheme,
+            onThemeChanged: _setTheme,
           ),
         ],
       ),
@@ -91,30 +124,35 @@ class _HomeScreenState extends State<HomeScreen> {
                   label: 'Tipps',
                   isSelected: _currentIndex == 0,
                   onTap: () => setState(() => _currentIndex = 0),
+                  themeColor: AppTheme.getPrimaryColor(_currentTheme),
                 ),
                 _NavItem(
                   icon: Icons.emoji_events,
                   label: 'Bestenliste',
                   isSelected: _currentIndex == 1,
                   onTap: () => setState(() => _currentIndex = 1),
+                  themeColor: AppTheme.getPrimaryColor(_currentTheme),
                 ),
                 _NavItem(
                   icon: Icons.list_alt,
                   label: 'Meine Tipps',
                   isSelected: _currentIndex == 2,
                   onTap: () => setState(() => _currentIndex = 2),
+                  themeColor: AppTheme.getPrimaryColor(_currentTheme),
                 ),
                 _NavItem(
                   icon: Icons.admin_panel_settings,
                   label: 'Admin',
                   isSelected: _currentIndex == 3,
                   onTap: () => setState(() => _currentIndex = 3),
+                  themeColor: AppTheme.getPrimaryColor(_currentTheme),
                 ),
                 _NavItem(
                   icon: Icons.person,
                   label: 'Profil',
                   isSelected: _currentIndex == 4,
                   onTap: () => setState(() => _currentIndex = 4),
+                  themeColor: AppTheme.getPrimaryColor(_currentTheme),
                 ),
               ],
             ),
@@ -130,17 +168,19 @@ class _NavItem extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+  final Color themeColor;
 
   const _NavItem({
     required this.icon,
     required this.label,
     required this.isSelected,
     required this.onTap,
+    required this.themeColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? AppTheme.primaryOrange : AppTheme.mediumGray;
+    final color = isSelected ? themeColor : AppTheme.mediumGray;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,

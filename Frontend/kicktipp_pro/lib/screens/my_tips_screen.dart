@@ -8,8 +8,13 @@ enum _FilterType { all, finished, open }
 
 class MyTipsScreen extends StatefulWidget {
   final String userName;
+  final Color themeColor;
 
-  const MyTipsScreen({super.key, required this.userName});
+  const MyTipsScreen({
+    super.key,
+    required this.userName,
+    required this.themeColor,
+  });
 
   @override
   State<MyTipsScreen> createState() => _MyTipsScreenState();
@@ -75,7 +80,7 @@ class _MyTipsScreenState extends State<MyTipsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.lightGray,
-      appBar: CustomAppBar(userName: widget.userName),
+      appBar: CustomAppBar(userName: widget.userName, backgroundColor: widget.themeColor),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -124,7 +129,7 @@ class _MyTipsScreenState extends State<MyTipsScreen> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.primaryOrange,
+                color: widget.themeColor,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -191,7 +196,7 @@ class _MyTipsScreenState extends State<MyTipsScreen> {
         itemCount: filteredTips.length,
         itemBuilder: (_, i) {
           final tip = filteredTips[i];
-          return _TipCard(tip: tip);
+          return _TipCard(tip: tip, themeColor: widget.themeColor);
         },
       ),
     );
@@ -237,8 +242,9 @@ class _FilterButton extends StatelessWidget {
 
 class _TipCard extends StatelessWidget {
   final TipDto tip;
+  final Color themeColor;
 
-  const _TipCard({required this.tip});
+  const _TipCard({required this.tip, required this.themeColor});
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +253,7 @@ class _TipCard extends StatelessWidget {
         ? 'Abgeschlossen - ${tip.pointsEarned} Pt.'
         : 'Ausstehend';
     final statusColor =
-        tip.isFinishedMatch ? AppTheme.darkGray : AppTheme.primaryOrange;
+        tip.isFinishedMatch ? AppTheme.darkGray : themeColor;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -271,6 +277,7 @@ class _TipCard extends StatelessWidget {
               _CompactTeamSection(
                 initials: getTeamInitials(tip.homeTeam),
                 teamName: tip.homeTeam,
+                themeColor: themeColor,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -300,6 +307,7 @@ class _TipCard extends StatelessWidget {
                 initials: getTeamInitials(tip.awayTeam),
                 teamName: tip.awayTeam,
                 isRight: true,
+                themeColor: themeColor,
               ),
             ],
           ),
@@ -350,11 +358,13 @@ class _CompactTeamSection extends StatelessWidget {
   final String initials;
   final String teamName;
   final bool isRight;
+  final Color themeColor;
 
   const _CompactTeamSection({
     required this.initials,
     required this.teamName,
     this.isRight = false,
+    required this.themeColor,
   });
 
   @override
@@ -369,7 +379,7 @@ class _CompactTeamSection extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppTheme.primaryOrange,
+              color: themeColor,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(

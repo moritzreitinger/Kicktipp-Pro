@@ -3,14 +3,20 @@ import '../theme/app_theme.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String userName;
+  final Color? backgroundColor;
 
-  const CustomAppBar({super.key, required this.userName});
+  const CustomAppBar({
+    super.key,
+    required this.userName,
+    this.backgroundColor,
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
+    final themeColor = backgroundColor ?? AppTheme.primaryOrange;
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -24,7 +30,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: AppTheme.primaryOrange,
+                color: themeColor,
                 shape: BoxShape.circle,
               ),
               child: const Icon(

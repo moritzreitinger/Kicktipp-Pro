@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 import '../widgets/custom_app_bar.dart';
 
 class AdminScreen extends StatefulWidget {
   final String userName;
   final VoidCallback? onResultSaved;
+  final Color themeColor;
 
   const AdminScreen({
     super.key,
     required this.userName,
     this.onResultSaved,
+    required this.themeColor,
   });
 
   @override
@@ -184,6 +188,19 @@ class _AdminScreenState extends State<AdminScreen> {
       _matchCache.clear();
       widget.onResultSaved?.call();
       
+      // Überprüfe ob Benachrichtigungen aktiviert sind
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final notificationsEnabled = prefs.getBool('push_notifications') ?? false;
+        if (notificationsEnabled && mounted) {
+          NotificationService().showNotification(
+            context: context,
+            message: '✅ Ergebnis für ${match.homeTeam} - ${match.awayTeam} gespeichert',
+            backgroundColor: widget.themeColor,
+          );
+        }
+      } catch (_) {}
+      
       // Refresh den aktuellen Spieltag
       if (_selectedMatchday != null) {
         await _loadMatchday(_selectedMatchday!);
@@ -206,7 +223,7 @@ class _AdminScreenState extends State<AdminScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.lightGray,
-      appBar: CustomAppBar(userName: widget.userName),
+      appBar: CustomAppBar(userName: widget.userName, backgroundColor: widget.themeColor),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -331,6 +348,7 @@ class _AdminScreenState extends State<AdminScreen> {
                 homeController: _controllers[match.id]!.$1,
                 awayController: _controllers[match.id]!.$2,
                 onSave: () => _saveResult(match),
+                themeColor: widget.themeColor,
               );
             },
           ),
@@ -346,12 +364,14 @@ class _AdminMatchCard extends StatefulWidget {
   final TextEditingController homeController;
   final TextEditingController awayController;
   final VoidCallback onSave;
+  final Color themeColor;
 
   const _AdminMatchCard({
     required this.match,
     required this.homeController,
     required this.awayController,
     required this.onSave,
+    required this.themeColor,
   });
 
   @override
@@ -466,7 +486,7 @@ class _AdminMatchCardState extends State<_AdminMatchCard> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryOrange,
+                backgroundColor: widget.themeColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               child: _isSaving

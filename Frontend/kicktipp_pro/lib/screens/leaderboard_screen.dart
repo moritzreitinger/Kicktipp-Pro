@@ -22,10 +22,12 @@ class LeaderboardPlayer {
 
 class LeaderboardScreen extends StatefulWidget {
   final String userName;
+  final Color themeColor;
 
   const LeaderboardScreen({
     super.key,
     required this.userName,
+    required this.themeColor,
   });
 
   @override
@@ -148,7 +150,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.lightGray,
-      appBar: CustomAppBar(userName: widget.userName),
+      appBar: CustomAppBar(userName: widget.userName, backgroundColor: widget.themeColor),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(
@@ -169,7 +171,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         ),
                         const SizedBox(height: 24),
                         // Top 3 Podium
-                        _buildPodium(),
+                        _buildPodium(widget.themeColor),
                       ],
                     ),
                   ),
@@ -179,7 +181,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final player = _players[index + 3];
-                      return _buildPlayerListItem(player, index + 4);
+                      return _buildPlayerListItem(player, index + 4, widget.themeColor);
                     },
                     childCount: _players.length > 3 ? _players.length - 3 : 0,
                   ),
@@ -189,7 +191,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
-  Widget _buildPodium() {
+  Widget _buildPodium(Color themeColor) {
     if (_players.length < 3) {
       return SizedBox.expand(
         child: Center(
@@ -210,18 +212,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             // Platz 2 (links, kleiner)
-            _buildPodiumCard(second, 2, 220),
+            _buildPodiumCard(second, 2, 220, themeColor),
             // Platz 1 (Mitte, größer)
-            _buildPodiumCard(first, 1, 280),
+            _buildPodiumCard(first, 1, 280, themeColor),
             // Platz 3 (rechts, mittel)
-            _buildPodiumCard(third, 3, 240),
+            _buildPodiumCard(third, 3, 240, themeColor),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPodiumCard(LeaderboardPlayer player, int rank, double height) {
+  Widget _buildPodiumCard(LeaderboardPlayer player, int rank, double height, Color themeColor) {
     final medalColor = _getMedalColor(rank);
     final isFirst = rank == 1;
 
@@ -236,7 +238,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             width: isFirst ? 80 : 70,
             height: isFirst ? 80 : 70,
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.2),
+              color: themeColor.withOpacity(0.2),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -276,7 +278,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             style: TextStyle(
               fontSize: isFirst ? 16 : 14,
               fontWeight: FontWeight.bold,
-              color: Colors.orange,
+              color: themeColor,
             ),
           ),
           // Volltreffer
@@ -315,7 +317,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
-  Widget _buildPlayerListItem(LeaderboardPlayer player, int displayRank) {
+  Widget _buildPlayerListItem(LeaderboardPlayer player, int displayRank, Color themeColor) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -341,7 +343,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.15),
+              color: themeColor.withOpacity(0.15),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -380,10 +382,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             children: [
               Text(
                 '${player.points}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.orange,
+                  color: themeColor,
                 ),
               ),
               const Text(

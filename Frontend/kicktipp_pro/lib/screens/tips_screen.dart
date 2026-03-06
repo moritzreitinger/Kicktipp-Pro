@@ -7,11 +7,13 @@ import '../widgets/match_card.dart';
 class TipsScreen extends StatefulWidget {
   final String userName;
   final VoidCallback? onTipSaved;
+  final Color themeColor;
 
   const TipsScreen({
     super.key,
     required this.userName,
     this.onTipSaved,
+    required this.themeColor,
   });
 
   @override
@@ -156,7 +158,7 @@ class _TipsScreenState extends State<TipsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.lightGray,
-      appBar: CustomAppBar(userName: widget.userName),
+      appBar: CustomAppBar(userName: widget.userName, backgroundColor: widget.themeColor),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -197,7 +199,7 @@ class _TipsScreenState extends State<TipsScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: _selectedIndex! > 0
-                                ? AppTheme.primaryOrange
+                                ? widget.themeColor
                                 : AppTheme.mediumGray,
                             shape: BoxShape.circle,
                           ),
@@ -240,7 +242,7 @@ class _TipsScreenState extends State<TipsScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: _selectedIndex! < _matchdays.length - 1
-                                ? AppTheme.primaryOrange
+                                ? widget.themeColor
                                 : AppTheme.mediumGray,
                             shape: BoxShape.circle,
                           ),
@@ -314,6 +316,7 @@ class _TipsScreenState extends State<TipsScreen> {
             existingTipHome: tip?.$1,
             existingTipAway: tip?.$2,
             onSaved: refreshMatches,
+            themeColor: widget.themeColor,
           );
         },
       ),
