@@ -43,6 +43,7 @@ class _TipsScreenState extends State<TipsScreen> {
   }
 
   Future<void> _load() async {
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
@@ -50,12 +51,14 @@ class _TipsScreenState extends State<TipsScreen> {
     try {
       final matchdays = await ApiService.getMatchdays();
       final tips = await ApiService.getUserTips(1);
-      
+      if (!mounted) return;
+
       final tipMap = <int, (int, int)>{};
       for (final t in tips) {
         tipMap[t.matchId] = (t.tipHome, t.tipAway);
       }
 
+      if (!mounted) return;
       setState(() {
         _matchdays = matchdays;
         _selectedIndex = 0;
@@ -63,12 +66,12 @@ class _TipsScreenState extends State<TipsScreen> {
         _userTips = tipMap;
         _loading = false;
       });
-      
-      // Lade gleich den ersten Spieltag
+
       if (_selectedMatchday != null) {
         await _loadMatchday(_selectedMatchday!);
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
         _loading = false;
@@ -77,21 +80,23 @@ class _TipsScreenState extends State<TipsScreen> {
   }
 
   Future<void> _loadMatchday(int matchday) async {
-    // Wenn bereits gecacht, verwende den Cache
     if (_matchCache.containsKey(matchday)) {
+      if (!mounted) return;
       setState(() {
         _matches = _matchCache[matchday]!;
       });
       return;
     }
 
-    // Sonst lade vom Backend
+    if (!mounted) return;
     setState(() => _error = null);
     try {
       final matches = await ApiService.getMatches(matchday: matchday);
+      if (!mounted) return;
       _matchCache[matchday] = matches;
       setState(() => _matches = matches);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
       });
@@ -128,26 +133,26 @@ class _TipsScreenState extends State<TipsScreen> {
 
   Future<void> refreshMatches() async {
     try {
-      // Lade nur die Tipps neu
       final tips = await ApiService.getUserTips(1);
-      
+      if (!mounted) return;
+
       final tipMap = <int, (int, int)>{};
       for (final t in tips) {
         tipMap[t.matchId] = (t.tipHome, t.tipAway);
       }
 
+      if (!mounted) return;
       setState(() {
         _userTips = tipMap;
       });
 
-      // Cache invalidieren und den aktuellen Spieltag neu laden
       if (_selectedMatchday != null) {
         _matchCache.remove(_selectedMatchday);
         await _loadMatchday(_selectedMatchday!);
       }
-      
       widget.onTipSaved?.call();
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
       });

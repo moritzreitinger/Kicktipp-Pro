@@ -8,7 +8,7 @@ import '../widgets/custom_app_bar.dart';
 
 class AdminScreen extends StatefulWidget {
   final String userName;
-  final VoidCallback? onResultSaved;
+  final Future<void> Function()? onResultSaved;
   final Color themeColor;
 
   const AdminScreen({
@@ -186,7 +186,7 @@ class _AdminScreenState extends State<AdminScreen> {
       
       // Cache invalidieren und neu laden damit das Spiel verschwindet
       _matchCache.clear();
-      widget.onResultSaved?.call();
+      await widget.onResultSaved?.call();
       
       // Überprüfe ob Benachrichtigungen aktiviert sind
       try {

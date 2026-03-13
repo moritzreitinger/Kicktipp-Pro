@@ -64,49 +64,42 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
-        switchInCurve: Curves.easeOut,
-        switchOutCurve: Curves.easeIn,
-        child: IndexedStack(
-          key: ValueKey(_currentIndex),
-          index: _currentIndex,
-          children: [
-            TipsScreen(
-              key: _tipsScreenKey,
-              userName: _userName,
-              themeColor: AppTheme.getPrimaryColor(_currentTheme),
-              onTipSaved: () {
-                (_myTipsScreenKey.currentState as dynamic)?.refreshTips();
-              },
-            ),
-            LeaderboardScreen(
-              userName: _userName,
-              themeColor: AppTheme.getPrimaryColor(_currentTheme),
-            ),
-            MyTipsScreen(
-              key: _myTipsScreenKey,
-              userName: _userName,
-              themeColor: AppTheme.getPrimaryColor(_currentTheme),
-            ),
-            AdminScreen(
-              key: _adminScreenKey,
-              userName: _userName,
-              themeColor: AppTheme.getPrimaryColor(_currentTheme),
-              onResultSaved: () {
-                // Refresh TipsScreen, MyTipsScreen und AdminScreen
-                (_tipsScreenKey.currentState as dynamic)?.refreshMatches();
-                (_myTipsScreenKey.currentState as dynamic)?.refreshTips();
-                (_adminScreenKey.currentState as dynamic)?.refreshMatches();
-              },
-            ),
-            ProfileScreen(
-              userName: _userName,
-              currentTheme: _currentTheme,
-              onThemeChanged: _setTheme,
-            ),
-          ],
-        ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          TipsScreen(
+            key: _tipsScreenKey,
+            userName: _userName,
+            themeColor: AppTheme.getPrimaryColor(_currentTheme),
+            onTipSaved: () {
+              (_myTipsScreenKey.currentState as dynamic)?.refreshTips();
+            },
+          ),
+          LeaderboardScreen(
+            userName: _userName,
+            themeColor: AppTheme.getPrimaryColor(_currentTheme),
+          ),
+          MyTipsScreen(
+            key: _myTipsScreenKey,
+            userName: _userName,
+            themeColor: AppTheme.getPrimaryColor(_currentTheme),
+          ),
+          AdminScreen(
+            key: _adminScreenKey,
+            userName: _userName,
+            themeColor: AppTheme.getPrimaryColor(_currentTheme),
+            onResultSaved: () async {
+              await (_tipsScreenKey.currentState as dynamic)?.refreshMatches();
+              await (_myTipsScreenKey.currentState as dynamic)?.refreshTips();
+              await (_adminScreenKey.currentState as dynamic)?.refreshMatches();
+            },
+          ),
+          ProfileScreen(
+            userName: _userName,
+            currentTheme: _currentTheme,
+            onThemeChanged: _setTheme,
+          ),
+        ],
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

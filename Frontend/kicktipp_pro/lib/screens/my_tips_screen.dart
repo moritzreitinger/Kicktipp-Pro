@@ -38,12 +38,14 @@ class _MyTipsScreenState extends State<MyTipsScreen> {
   }
 
   Future<void> _load() async {
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final tips = await ApiService.getUserTips(1);
+      if (!mounted) return;
       int totalPoints = 0;
       for (final tip in tips) {
         totalPoints += tip.pointsEarned;
@@ -54,6 +56,7 @@ class _MyTipsScreenState extends State<MyTipsScreen> {
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
         _loading = false;
