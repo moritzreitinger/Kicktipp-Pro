@@ -193,7 +193,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   Widget _buildPodium(Color themeColor) {
     if (_players.length < 3) {
-      return SizedBox.expand(
+      return SizedBox(
+        height: 220,
+        width: double.infinity,
         child: Center(
           child: Text('Zu wenig Spieler (${_players.length})'),
         ),
@@ -318,7 +320,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   Widget _buildPlayerListItem(LeaderboardPlayer player, int displayRank, Color themeColor) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(

@@ -1,0 +1,101 @@
+Projekt-Dokumentation für Kicktipp-Pro
+
+1. Projektübersicht
+- Name: Kicktipp-Pro
+- Architektur: separater Backend-/Frontend-Teil
+  - Backend: Node.js + TypeScript in /Backend
+  - Frontend: Flutter-App in /Frontend/kicktipp_pro
+
+2. Voraussetzungen
+- macOS / Windows / Linux
+- Git installiert
+- Node.js (>=18) + npm/yarn
+- Flutter SDK (empfohlen 3.x / 4.x)
+- Optional: Android Studio oder Xcode für mobile Builds
+
+3. Repository klonen
+1. git clone <repo-url>
+2. cd Kicktipp-Pro
+
+4. Backend starten
+4.1 Abhängigkeiten installieren
+cd Backend
+npm install
+
+4.2 Konfiguration prüfen
+- ggf. .env erstellen (falls benötigt: URL, DB, API-Key)
+- server.ts/config nach Port (z.B. 3000) checken
+
+4.3 Entwicklung starten
+npm run dev
+(oder: npm run start für Produktion)
+
+4.4 Testen
+- Browser/Postman: http://localhost:3000/api/health oder http://localhost:3000
+
+5. Frontend starten
+5.1 Abhängigkeiten installieren
+cd Frontend/kicktipp_pro
+flutter pub get
+
+5.2 App lokal starten
+- Android: flutter run -d emulator-<name> oder flutter emulators --launch <name>
+- iOS: flutter run -d iPhone-14 (nur macOS)
+- Web: flutter run -d chrome
+
+5.3 Backend-URL konfigurieren
+- lib/services / settings prüfen: baseUrl ggf. localhost:3000 setzen
+- Für Emulator:
+  - Android: 10.0.2.2 statt localhost
+  - iOS: localhost (Simulator)
+
+6. App-Bedienung (Schritt für Schritt)
+6.1 Startbildschirm / Login
+- App öffnen
+- Login-Bildschirm: E-Mail / Passwort eingeben
+- Anmelden
+
+6.2 Homescreen / Wettkampf-Auswahl
+- Turnier wählen
+- Datum prüfen
+
+6.3 Tippabgabe
+- Begegnung wählen
+- Tipp eintragen
+- Speichern
+
+6.4 Leaderboard / Rangliste
+- Menü -> Rangliste
+- Punkte, Position, Filter (z.B. pro Spieltag)
+
+6.5 Admin-Funktionen (falls vorhanden)
+- Extrapunkte vergeben
+- Spieler verwalten
+- Spielpläne einpflegen
+
+7. Hinweise zur Entwicklung
+- Flutter Hot-Reload nutzen (r)
+- flutter analyze für Code-Qualität
+- flutter test für Unit/Widget-Tests
+- Backend npm test (falls vorhanden)
+
+8. Produktion & Release
+Backend:
+- npm run build / npm run start + PM2 oder Docker
+- Port-Mapping & Umgebungsvariablen setzen
+Frontend:
+- iOS: flutter build ios
+- Android: flutter build apk / flutter build appbundle
+- Web: flutter build web
+
+9. Troubleshoot / FAQ
+- Backend startet nicht: Node-Version prüfen + npm prune + npm install
+- Frontend API-Fehler: CORS prüfen, URL-Host anpassen
+- Flutter-Abhängigkeit Konflikte: flutter clean, flutter pub get
+- Debugging: flutter logs / flutter run --verbose
+
+10. Zusätzliche Sektionen (optional)
+- Architekturdiagramm
+- API-Endpoints (z.B. /users, /leaderboard, /predictions)
+- Feature-Liste
+- Build-/Release-Checkliste

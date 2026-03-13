@@ -385,7 +385,9 @@ class _AdminMatchCardState extends State<_AdminMatchCard> {
   Widget build(BuildContext context) {
     final match = widget.match;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

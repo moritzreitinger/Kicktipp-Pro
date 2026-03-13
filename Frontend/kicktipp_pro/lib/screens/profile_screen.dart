@@ -346,7 +346,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String value,
     required Color color,
   }) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -390,7 +392,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       onTap: () {
         widget.onThemeChanged(theme);
       },
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,

@@ -141,7 +141,9 @@ class _MatchCardState extends State<MatchCard> {
                 : Colors.white;
     final borderColor = _savedSuccess ? Colors.green : Colors.transparent;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -212,6 +214,36 @@ class _MatchCardState extends State<MatchCard> {
                 teamName: match.awayTeam,
                 isLeft: false,
                 themeColor: widget.themeColor,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  match.homeTeam,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.darkGray,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  match.awayTeam,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.darkGray,
+                  ),
+                  textAlign: TextAlign.right,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),

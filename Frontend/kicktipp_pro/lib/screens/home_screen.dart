@@ -64,43 +64,49 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          TipsScreen(
-            key: _tipsScreenKey,
-            userName: _userName,
-            themeColor: AppTheme.getPrimaryColor(_currentTheme),
-            onTipSaved: () {
-              (_myTipsScreenKey.currentState as dynamic)?.refreshTips();
-            },
-          ),
-          LeaderboardScreen(
-            userName: _userName,
-            themeColor: AppTheme.getPrimaryColor(_currentTheme),
-          ),
-          MyTipsScreen(
-            key: _myTipsScreenKey,
-            userName: _userName,
-            themeColor: AppTheme.getPrimaryColor(_currentTheme),
-          ),
-          AdminScreen(
-            key: _adminScreenKey,
-            userName: _userName,
-            themeColor: AppTheme.getPrimaryColor(_currentTheme),
-            onResultSaved: () {
-              // Refresh TipsScreen, MyTipsScreen und AdminScreen
-              (_tipsScreenKey.currentState as dynamic)?.refreshMatches();
-              (_myTipsScreenKey.currentState as dynamic)?.refreshTips();
-              (_adminScreenKey.currentState as dynamic)?.refreshMatches();
-            },
-          ),
-          ProfileScreen(
-            userName: _userName,
-            currentTheme: _currentTheme,
-            onThemeChanged: _setTheme,
-          ),
-        ],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        child: IndexedStack(
+          key: ValueKey(_currentIndex),
+          index: _currentIndex,
+          children: [
+            TipsScreen(
+              key: _tipsScreenKey,
+              userName: _userName,
+              themeColor: AppTheme.getPrimaryColor(_currentTheme),
+              onTipSaved: () {
+                (_myTipsScreenKey.currentState as dynamic)?.refreshTips();
+              },
+            ),
+            LeaderboardScreen(
+              userName: _userName,
+              themeColor: AppTheme.getPrimaryColor(_currentTheme),
+            ),
+            MyTipsScreen(
+              key: _myTipsScreenKey,
+              userName: _userName,
+              themeColor: AppTheme.getPrimaryColor(_currentTheme),
+            ),
+            AdminScreen(
+              key: _adminScreenKey,
+              userName: _userName,
+              themeColor: AppTheme.getPrimaryColor(_currentTheme),
+              onResultSaved: () {
+                // Refresh TipsScreen, MyTipsScreen und AdminScreen
+                (_tipsScreenKey.currentState as dynamic)?.refreshMatches();
+                (_myTipsScreenKey.currentState as dynamic)?.refreshTips();
+                (_adminScreenKey.currentState as dynamic)?.refreshMatches();
+              },
+            ),
+            ProfileScreen(
+              userName: _userName,
+              currentTheme: _currentTheme,
+              onThemeChanged: _setTheme,
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -184,20 +190,34 @@ class _NavItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 24, color: color),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: color,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? themeColor.withOpacity(0.08) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedScale(
+              scale: isSelected ? 1.1 : 1.0,
+              duration: const Duration(milliseconds: 180),
+              child: Icon(icon, size: 24, color: color),
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 180),
+              style: TextStyle(
+                fontSize: 12,
+                color: color,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.normal,
+              ),
+              child: Text(label),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -255,7 +255,9 @@ class _TipCard extends StatelessWidget {
     final statusColor =
         tip.isFinishedMatch ? AppTheme.darkGray : themeColor;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
